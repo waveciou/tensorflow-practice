@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hand Pose Detection CNN</title>
+</head>
+
+<body>
+  <canvas id='canvas1'></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
+
+  <script>
+    // 宣告 canvas 物件
+    const canvas1 = document.getElementById('canvas1');
+    // 宣告 canvas 繪圖物件
+    const ctx = canvas1.getContext('2d');
+
+    // 先告js 影像物件
+    const myImage = new Image();
+    // 指定本地端範例影像路徑
+    myImage.src = "gestures-sample2.jpeg";
+    // 一旦成功載入影像，觸發執行loadImage函式
+    myImage.addEventListener("load", loadImage, false);
+
+    // 觸發函式
+    async function loadImage(e) {
+      // 範例影像大小
+      img_width = myImage.width;
+      img_height = myImage.height;
+
+      // 調整canvas大小
+      canvas1.width = img_width;
+      canvas1.height = img_height;
+
+      // 手部關節點註解文字顏色
+      ctx.strokeStyle = "red";
+      // 手部關節點註解文字大小&字體
+      ctx.font = "20px Arial";
+      // canvas 繪製底圖
+      ctx.drawImage(myImage, 0, 0, img_width, img_height);
+
+      // 讀取模型
+      const model = handPoseDetection.SupportedModels.MediaPipeHands;
+      const detectorConfig = {
+        runtime: 'tfjs', //指定tfjs runtime
+      };
+      detector = await handPoseDetection.createDetector(model, detectorConfig);
+
+      // 模型推論分析
+      const estimationConfig = { flipHorizontal: false }; // 關閉水平翻轉前處理
+      const hands = await detector.estimateHands(canvas1, estimationConfig);
+      console.log(hands);
+
+      // 繪製模型分析結果
+      for (let j = 0; j < hands.length; j++) {
+        keypoints = hands[j].keypoints;
+        for (let i = 0; i < keypoints.length; i++) {
+          console.log(keypoints[i]);
+
+          // 關節點 pixel-wise 位置
+          x = keypoints[i].x;
+          y = keypoints[i].y;
+
+          // 關節點類別
+          name = keypoints[i].name;
+
+          // 圈選關節點估測位置
+          ctx.beginPath();
+          ctx.arc(x, y, 10, 0, 2 * Math.PI);
+          ctx.stroke();
+
+          // 繪製關節點文字註解
+          ctx.fillText(name, x + 30, y);
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
