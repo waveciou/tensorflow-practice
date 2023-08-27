@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BodyPix</title>
+</head>
+
+<body>
+  <canvas id='canvas1'></canvas>
+  <canvas id='canvas2'></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.0"></script>
+
+  <script>
+    // canvas 物件宣告
+    const canvas1 = document.getElementById('canvas1');
+    const canvas2 = document.getElementById('canvas2');
+    // canvas 繪製物件宣告
+    const ctx = canvas1.getContext('2d');
+
+    // js 影像物件宣告
+    const myImage = new Image();
+    // 指定本地端範例影像路徑
+    myImage.src = "bg_removal.jpeg";
+    // 一旦成功載入影像，觸發執行loadImage函式
+    myImage.addEventListener("load", loadImage, false);
+
+    // 觸發函式
+    async function loadImage(e) {
+      // 範例影像大小
+      img_width = myImage.width;
+      img_height = myImage.height;
+
+      // 調整canvas大小
+      canvas1.width = img_width;
+      canvas1.height = img_height;
+
+      // canvas 繪製原圖
+      ctx.drawImage(myImage, 0, 0, img_width, img_height);
+
+      // 讀取模型
+      const net = await bodyPix.load();
+
+      // 模型推論分析
+      const segmentation = await net.segmentPerson(canvas1);
+      console.log(segmentation);
+
+      // 繪製模型分析結果
+      const maskBackground = true;
+      const foregroundColor = { r: 0, g: 0, b: 0, a: 0 }; // 前景mask顏色
+      const backgroundColor = { r: 0, g: 0, b: 0, a: 255 }; // 背景mask顏色
+      const backgroundDarkeningMask = bodyPix.toMask(
+        segmentation, foregroundColor, backgroundColor);
+
+      const opacity = 0.7; // 底圖影像的不透明度
+      const maskBlurAmount = 3; // 人體與背景區塊邊界模糊程度
+      const flipHorizontal = false; //關閉水平翻轉前處理
+      // 繪製結果
+      bodyPix.drawMask(
+        canvas2, canvas1, backgroundDarkeningMask, opacity, maskBlurAmount, flipHorizontal);
+    }
+  </script>
+</body>
+
+</html>
