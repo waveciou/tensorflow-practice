@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNN</title>
+</head>
+
+<body>
+  <canvas></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-detection"></script>
+
+  <script>
+    // 宣告 canvas 物件
+    const canvas = document.querySelector('canvas');
+    // 宣告 canvas 繪圖物件
+    const ctx = canvas.getContext('2d');
+
+    // 先告js 影像物件
+    const myImage = new Image();
+    // 指定本地端範例影像路徑
+    myImage.src = "seg_sample.png";
+    // 一旦成功載入影像，觸發執行loadImage函式
+    myImage.addEventListener("load", loadImage, false);
+
+    // 觸發函式
+    async function loadImage(e) {
+      // 範例影像大小
+      img_width = myImage.width;
+      img_height = myImage.height;
+
+      // 調整canvas大小
+      canvas.width = img_width;
+      canvas.height = img_height;
+
+      // 臉部特徵點註解文字顏色
+      ctx.strokeStyle = "yellow";
+      // 臉部特徵點註解文字大小
+      ctx.font = "25px Arial";
+      // canvas 繪製底圖
+      ctx.drawImage(myImage, 0, 0, img_width, img_height);
+
+      // 讀取模型
+      const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
+      const detectorConfig = {
+        runtime: 'tfjs',
+      };
+      detector = await faceDetection.createDetector(model, detectorConfig);
+
+      // 模型推論分析
+      const estimationConfig = { flipHorizontal: false }; //關閉水平翻轉前處理
+      const faces = await detector.estimateFaces(canvas, estimationConfig);
+      console.log(faces);
+
+      // 繪製模型分析結果
+      for (let i = 0; i < faces.length; i++) {
+        // box
+        box = faces[i].box;
+        const x = box.xMin;
+        const y = box.yMin;
+        const w = box.width;
+        const h = box.height;
+        ctx.strokeRect(x, y, w, h);
+
+        // keypoints
+        keypoints = faces[i].keypoints;
+
+        for (let i = 0; i < keypoints.length; i++) {
+          console.log(keypoints[i]);
+
+          // 特徵點 pixel-wise 位置
+          x = keypoints[i].x;
+          y = keypoints[i].y;
+          // 特徵點類別
+          name = keypoints[i].name;
+
+          // 圈選特徵點估測位置
+          ctx.beginPath();
+          ctx.arc(x, y, 10, 0, 2 * Math.PI);
+          ctx.stroke();
+
+          // 繪製特徵點文字註解
+          ctx.fillText(name, x + 30, y);
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
