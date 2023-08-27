@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobilenet</title>
+</head>
+
+<body>
+  <h1>Prediction: </h1>
+  <header id="prediction">
+    <h2>Processing...</h2>
+  </header>
+  <h1>Confidence Score: </h1>
+  <header id="score">
+    <h2>Processing...</h2>
+  </header>
+
+  <form method="post" enctype="multipart/form-data">
+    <div>
+      <input type="file" id="image_uploads" name="image_uploads" accept=".jpg, .jpeg, .png"
+        style="position:absolute;height:320px;width:550px;">
+    </div>
+    <div class="preview" style="float:left;background:#cccccc;height:320px;width:550px;text-align:center;z-index:1;">
+      <p style="line-height: 300px;">未選擇任何檔案</p>
+    </div>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.1"> </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@1.0.0"> </script>
+
+  <script>
+    const input = document.getElementById('image_uploads');
+    const preview = document.querySelector('.preview');
+
+    input.style.opacity = 0;
+    input.addEventListener('change', updateImageDisplay); function updateImageDisplay() {
+      while (preview.firstChild) {
+        preview.removeChild(preview.firstChild);
+      }
+
+      if (input.files.length === 0) {
+        const para = document.createElement('p');
+        para.textContent = '未選擇任何檔案';
+        para.style = "line-height: 300px;";
+        preview.appendChild(para);
+      } else {
+        const para = document.createElement('p');
+        const image = document.createElement('img');
+        image.src = window.URL.createObjectURL(input.files[0]);
+        preview.appendChild(image);
+        preview.appendChild(para);
+        loadImage(image)
+      }
+    }
+
+    // 觸發函式
+    async function loadImage(img) {
+      // 分析結果文字物件
+      let header2 = document.getElementById("prediction");
+      let header4 = document.getElementById("score");
+
+      // 讀取模型
+      mobilenet.load().then(model => {
+        // 類別分析
+        model.classify(img).then(predictions => {
+          console.log(predictions)
+          // 類別
+          header2.innerText = predictions[0]['className'];
+          // 分數
+          header4.innerText = predictions[0]['probability'];
+        });
+      });
+    }
+  </script>
+</body>
+
+</html>
