@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSD</title>
+</head>
+
+<body>
+  <canvas></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"> </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
+  <script>
+    // 宣告 canvas 物件
+    const canvas = document.querySelector('canvas')
+    // canvas 繪製物件
+    const ctx = canvas.getContext('2d')
+
+    // 宣告 js 影像物件
+    const myImage = new Image();
+    myImage.src = "od_sample4.jpeg"; // 範例影像路徑
+    myImage.addEventListener("load", loadImage, false);// 一旦成功讀取影像，觸發loadImage
+
+    // 觸發函示
+    function loadImage(e) {
+      // 範例影像大小
+      img_width = myImage.width;
+      img_height = myImage.height;
+
+      // 調整canvas大小
+      canvas.width = img_width;
+      canvas.height = img_height;
+
+      ctx.strokeStyle = "red"; // 物件框顏色
+      ctx.font = "30px Arial"; // 物件類別註解文字大小
+      ctx.drawImage(myImage, 0, 0, img_width, img_height);// 繪製底圖
+
+      // 讀取模型
+      cocoSsd.load().then(model => {
+        // 模型分析推論
+        model.detect(canvas).then(predictions => {
+          // 繪製分析結果
+          for (let i = 0; i < predictions.length; i++) {
+            console.log(predictions[i]);
+
+            // 物件框
+            const x = predictions[i].bbox[0];
+            const y = predictions[i].bbox[1];
+            const w = predictions[i].bbox[2];
+            const h = predictions[i].bbox[3];
+            ctx.strokeRect(x, y, w, h);
+
+            // 物件類別文字
+            ctx.fillText(predictions[i].class, x, y + 30);
+          }
+        });
+      });
+    }
+  </script>
+</body>
+
+</html>
