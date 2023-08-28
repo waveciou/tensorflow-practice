@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toxicity BERT</title>
+</head>
+
+<body>
+  <div>
+    <h2>輸入英文敘述</h2>
+    Comment:<input type="text" id="myText" value="You suck.">
+    <button type="button" onclick="myFunction()">Submit</button>
+    <p id="demo"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
+  <script>
+    function myFunction() {
+      // 輸入文字
+      const sentences = [document.getElementById("myText").value];
+      const ans = document.getElementById("demo");
+      ans.innerHTML = 'Answer: (Processing...)'
+      // 意圖分數閥值
+      const threshold = 0.9;
+      // 讀取模型
+      toxicity.load(threshold).then(model => {
+        // 模型分析
+        model.classify(sentences).then(predictions => {
+          let res = '';
+          // 逐一擷取意圖
+          for (let j = 0; j < predictions.length; j++) {
+            console.log(predictions[j]);
+            match = predictions[j].results[0].match
+            if (match === true) {
+              label = predictions[j].label
+              res += ' ' + label
+              console.log(label)
+            };
+          };
+          // 輸出意圖結果
+          document.getElementById("demo").innerHTML = res;
+        });
+      });
+    }
+  </script>
+</body>
+
+</html>
