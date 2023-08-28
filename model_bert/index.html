@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>BERT</title>
+</head>
+
+<body>
+  <div>
+    <h2>輸入英文文本段落敘述</h2>
+    Passage:<input type="text" id="passage" size="100" value="My name is Jerry and I live in Taiwan.">
+    <h2>針對文本提問</h2>
+    Question:<input type="text" id="question" size="50" value="What's my name?">
+    <button type="button" onclick="myFunction()">Confirm</button>
+    <p id="ans"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"> </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/qna"> </script>
+  <script>
+    function myFunction() {
+      const passage = document.getElementById("passage").value; // 敘述段落
+      const question = document.getElementById("question").value; // 問題
+      const ans = document.getElementById("ans");
+      ans.innerHTML = 'Answer: (Processing...)';
+      console.log(passage);
+      console.log(question);
+
+      // 讀取模型
+      qna.load().then(model => {
+        // 分析答案
+        model.findAnswers(question, passage).then(answers => {
+          console.log('Answers: ', answers);
+          ans.innerHTML = "Answer: " + answers[0].text;
+        });
+      });
+    }
+  </script>
+</body>
+
+</html>
