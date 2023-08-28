@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>USE</title>
+</head>
+
+<body>
+  <div>
+    <h2>輸入比對基準的英文敘述</h2>
+    Template:<input type="text" id="template" size="50" value="How are you feeling today?">
+    <h2>輸入候選比對對象</h2>
+    Candidate1:<input type="text" id="candidate1" size="50" value="What is captial of China?">
+    <br />
+    Candidate2:<input type="text" id="candidate2" size="50" value="I\'m not feeling very well.">
+    <br />
+    Candidate3:<input type="text" id="candidate3" size="50" value="Beijing is the capital of China.">
+    <br />
+    Candidate4:<input type="text" id="candidate4" size="50" value="You have five fingers on your hand.">
+    <!-- 送出按鈕 -->
+    <button type="button" onclick="myFunction()">Confirm</button>
+    <br /><br />
+    <p id="ans"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder"></script>
+  <script>
+    function myFunction() {
+        const input = {
+          // 基準句
+          queries: [
+            document.getElementById("template").value
+          ],
+          // 候選句
+          responses: [
+            document.getElementById("candidate1").value,
+            document.getElementById("candidate2").value,
+            document.getElementById("candidate3").value,
+            document.getElementById("candidate4").value
+          ]
+        };
+
+        // 最近相似度結果欄位
+        const ans = document.getElementById("ans");
+        ans.innerHTML = 'Answer: (Processing...)';
+        console.log(input);
+
+        // 讀取模型
+        use.loadQnA().then(model => {
+          const scores = [];
+          // 嵌向量計算
+          const embeddings = model.embed(input);
+
+          // 擷取嵌向量
+          const embed_query = embeddings['queryEmbedding'].arraySync();
+          const embed_responses = embeddings['responseEmbedding'].arraySync();
+
+          // 相似度計算
+          for (let j = 0; j < input['responses'].length; j++) {
+            scores.push(dotProduct(embed_query[0], embed_responses[j]));
+          }
+
+          console.log(scores);
+
+          // 取得最高相似度的候選句
+          const idx = scores.map((x, i) => [x, i]).reduce((r, a) => (a[0] > r[0] ? a : r))[1];
+          ans.innerHTML = "Answer: " + input['responses'][idx] + " (Similarity: " + scores[idx] + ")";
+        });
+    }
+
+    // 內積計算相似度
+    const dotProduct = (xs, ys) => {
+      const sum = xs => xs ? xs.reduce((a, b) => a + b, 0) : undefined;
+
+      return xs.length === ys.length ?
+        sum(zipWith((a, b) => a * b, xs, ys))
+        : undefined;
+    }
+  
+    // zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+    const zipWith =
+        (f, xs, ys) => {
+          const ny = ys.length;
+          return (xs.length <= ny ? xs : xs.slice(0, ny))
+              .map((x, i) => f(x, ys[i]));
+    }
+  </script>
+</body>
+
+</html>
