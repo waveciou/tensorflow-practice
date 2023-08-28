@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DNN</title>
+</head>
+
+<body>
+  <div>
+    <h2>嘗試唸出下列英文單詞: </h2>
+    <h4>"yes"、"no"</h4>
+    <h4>"up"、"down"、"left"、"right"</h4>
+    <h4>"go"、"stop"</h4>
+    <h4>"zero"、"one"、"two"、"three"、"four"、"five"、"six"、"seven"、"eight"、"nine"</h4>
+
+    <h2>Prediction: </h2>
+    <header id="prediction">
+      <h3>(No keyword detected)</h3>
+    </header>
+    <h2>Confidence Score: </h2>
+    <header id="score">
+      <h3>(No keyword detected)</h3>
+    </header>
+    <img id="img" height="600" , width="600">
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands"></script>
+  <script>
+    // 分析結果文字物件
+    let header2 = document.getElementById("prediction");
+    let header4 = document.getElementById("score");
+    let img = document.getElementById("img");
+
+    // 結果影像列表
+    const img_table = {
+      'zero': 'speech/0.png',
+      'two': 'speech/2.png',
+      'four': 'speech/4.png',
+      'six': 'speech/6.png',
+      'eight': 'speech/8.png',
+      'down': 'speech/down.jpg',
+      'left': 'speech/left.jpg',
+      'right': 'speech/right.jpg',
+      'up': 'speech/up.jpg',
+      'one': 'speech/1.png',
+      'three': 'speech/3.png',
+      'five': 'speech/5.png',
+      'seven': 'speech/7.png',
+      'nine': 'speech/9.png',
+      'go': 'speech/go.jpeg',
+      'no': 'speech/no.jpeg',
+      'stop': 'speech/stop.jpeg',
+      'yes': 'speech/yes.jpeg'
+    }
+
+    async function app() {
+      // 讀取模型
+      recognizer = speechCommands.create('BROWSER_FFT');
+      await recognizer.ensureModelLoaded();
+
+      // 語音單字類別清單
+      const words = recognizer.wordLabels();
+      console.log(words);
+
+      // 模型語音辨識
+      recognizer.listen(result => {
+        console.log(result)
+
+        // 配對目標單字與信心分數
+        var pairs = [];
+        scores = result.scores;
+        for (let j = 0; j < scores.length; j++) {
+          pairs.push({ score: scores[j], word: words[j] });
+        }
+
+        // 依信心分數排序
+        pairs.sort((s1, s2) => s2.score - s1.score);
+
+        // 類別
+        word = pairs[0].word;
+        header2.innerText = word;
+        // 分數
+        header4.innerText = pairs[0].score;
+        // 影像
+        img.src = img_table[word];
+      }, {
+        includeSpectrogram: true,
+        probabilityThreshold: 0.75
+      });
+
+      // 幾毫秒後停止識別
+      setTimeout(() => recognizer.stopListening(), 10e99999);
+    }
+    app();
+  </script>
+</body>
+
+</html>
